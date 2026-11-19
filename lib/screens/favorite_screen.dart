@@ -17,14 +17,15 @@ class FavoriteScreen extends StatelessWidget {
           'Favorite',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF4C6EF5),
+        backgroundColor: const Color(0xFF4CAF50),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: ValueListenableBuilder<Box>(
         valueListenable: box.listenable(),
         builder: (context, b, _) {
-          if (b.isEmpty)
+          // Tampilan kosong
+          if (b.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -36,16 +37,26 @@ class FavoriteScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Belum ada produk favorit',
+                    'Belum ada resep favorit',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Tambahkan resep favoritmu dari halaman detail',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade400,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             );
+          }
 
           final List<ProductModel> favs = b.values
               .map(
@@ -65,41 +76,58 @@ class FavoriteScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
-                color: const Color(0xFFFBFBFE),
+                color: Colors.white,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),
                   onTap: () => Navigator.push(
                     ctx,
-                    MaterialPageRoute(builder: (_) => DetailScreen(item: item)),
+                    MaterialPageRoute(
+                      builder: (_) => DetailScreen(item: item),
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
+                        // === Gambar Resep ===
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            item.imageUrl,
-                            width: 80,
-                            height: 60,
-                            fit: BoxFit.cover,
-                            errorBuilder: (c, e, s) => Container(
-                              width: 80,
-                              height: 60,
-                              color: Colors.grey.shade200,
-                              child: const Icon(
-                                Icons.image_not_supported_outlined,
-                                color: Colors.grey,
-                                size: 28,
-                              ),
-                            ),
-                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          child: item.imageUrl.isNotEmpty
+                              ? Image.network(
+                                  item.imageUrl,
+                                  width: 72,
+                                  height: 72,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (c, e, s) => Container(
+                                    width: 72,
+                                    height: 72,
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(
+                                      Icons.image_not_supported_outlined,
+                                      color: Colors.grey,
+                                      size: 28,
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  width: 72,
+                                  height: 72,
+                                  color: Colors.grey.shade200,
+                                  child: const Icon(
+                                    Icons.restaurant_menu,
+                                    color: Colors.grey,
+                                    size: 28,
+                                  ),
+                                ),
                         ),
                         const SizedBox(width: 14),
+
+                        // === Info Resep ===
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Judul
                               Text(
                                 item.title,
                                 maxLines: 2,
@@ -111,28 +139,32 @@ class FavoriteScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 4),
+                              // Asal masakan • Tingkat kesulitan (sesuai soal)
                               Text(
-                                'Rp ${item.price.toStringAsFixed(0)}',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF4C6EF5),
+                                '${item.category} · ${item.brand}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
                                 ),
                               ),
                             ],
                           ),
                         ),
+
+                        // === Tombol Hapus Favorite ===
                         IconButton(
                           icon: const Icon(Icons.favorite, color: Colors.red),
                           onPressed: () async {
                             await b.delete(item.id.toString());
-                            if (ctx.mounted)
+                            if (ctx.mounted) {
                               ScaffoldMessenger.of(ctx).showSnackBar(
                                 const SnackBar(
                                   content: Text('Dihapus dari favorite'),
+                                  backgroundColor: Colors.orange,
                                   duration: Duration(seconds: 1),
                                 ),
                               );
+                            }
                           },
                         ),
                       ],

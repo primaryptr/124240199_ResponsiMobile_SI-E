@@ -16,10 +16,10 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Product Store App', // <-- Ganti sesuai soal
+      title: 'Resep Masakan',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4C6EF5)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4CAF50)),
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF7F8FC),
       ),

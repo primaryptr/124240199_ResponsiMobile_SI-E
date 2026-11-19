@@ -1,14 +1,3 @@
-// =========================================================================
-// [SIMULASI MODUL 5: HALAMAN UTAMA PRODUK]
-// PERBEDAAN DARI TEMPLATE-01:
-// - Judul menu: kategori produk e-commerce (All Products, Beauty, Fragrances)
-// - Endpoint menggunakan daftar resep DummyJSON.
-//
-// CARA ADAPTASI:
-// 1. Ganti title dan subtitle tiap menu.
-// 2. Ganti string endpoint — perhatikan format DummyJSON: 'recipes/tag/nama'
-// =========================================================================
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -42,22 +31,22 @@ class HomeScreen extends StatelessWidget {
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: const Color(0xFFFBFBFE),
+      color: Colors.white,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFECEEFE),
+                  color: const Color(0xFFD7F5DC),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: const Color(0xFF4C6EF5), size: 28),
+                child: Icon(icon, color: const Color(0xFF4CAF50), size: 28),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -67,12 +56,12 @@ class HomeScreen extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
                       subtitle,
                       style: TextStyle(
@@ -84,6 +73,8 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              const Icon(Icons.arrow_forward_ios,
+                  size: 16, color: Colors.grey),
             ],
           ),
         ),
@@ -96,73 +87,126 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FC),
       appBar: AppBar(
-        title: Text(
-          'Hai, $username!',
-          style: const TextStyle(
+        title: const Text(
+          'Resep Masakan',
+          style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFF4C6EF5),
+        backgroundColor: const Color(0xFF4CAF50),
         elevation: 0,
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            tooltip: 'Log Out',
+            onPressed: () => _logout(context),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header sambutan
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Halo, $username! 👋',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Temukan resep masakan favoritmu hari ini',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Text(
+                'Kategori Resep',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+
               Expanded(
                 child: ListView(
                   children: [
-                    // [RESPONSI]: Menu 1 - Ganti title, subtitle, dan endpoint
+                    // Menu 1 - Semua Resep
                     _buildMenuCard(
                       context: context,
-                      icon: Icons.local_pizza_outlined,
-                      title: 'Classic Margherita Pizza', // <-- Ganti nama menu
-                      subtitle: 'Italian Rate 4,6', // <-- Ganti deskripsi
+                      icon: Icons.restaurant_menu,
+                      title: 'Semua Resep Masakan',
+                      subtitle: 'Jelajahi semua resep dari berbagai cuisine',
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => const ListScreen(
-                            Title: 'Classic Margherita Pizza',
-                            endpoint: 'recipes/tag/Pizza',
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // [RESPONSI]: Menu 2 - Ganti title, subtitle, dan endpoint
-                    _buildMenuCard(
-                      context: context,
-                      icon: Icons.spa_outlined,
-                      title: 'Vegetarian Stir-fry', // <-- Ganti nama menu
-                      subtitle: 'Asian Rate 4,7', // <-- Ganti deskripsi
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ListScreen(
-                            Title: 'Vegetarian Stir-fry',
-                            endpoint: 'recipes/tag/Vegetarian',
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // [RESPONSI]: Menu 3 - Ganti title, subtitle, dan endpoint
-                    _buildMenuCard(
-                      context: context,
-                      icon: Icons.local_florist_outlined,
-                      title: 'Fragrances', // <-- Ganti nama menu
-                      subtitle:
-                          'Koleksi wewangian premium.', // <-- Ganti deskripsi
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ListScreen(
-                            Title: 'Fragrances',
+                            title: 'Resep Masakan',
                             endpoint: 'recipes',
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Menu 2 - Resep Asia
+                    _buildMenuCard(
+                      context: context,
+                      icon: Icons.ramen_dining_outlined,
+                      title: 'Resep Asia',
+                      subtitle: 'Resep-resep khas masakan Asia',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ListScreen(
+                            title: 'Resep Asia',
+                            endpoint: 'recipes/tag/Asian',
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Menu 3 - Resep Pakistani
+                    _buildMenuCard(
+                      context: context,
+                      icon: Icons.local_dining_outlined,
+                      title: 'Resep Pakistani',
+                      subtitle: 'Sajian khas masakan Pakistan yang lezat',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ListScreen(
+                            title: 'Resep Pakistani',
+                            endpoint: 'recipes/tag/Pakistani',
                           ),
                         ),
                       ),
@@ -170,26 +214,6 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: 140,
-                height: 42,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                  ),
-                  onPressed: () => _logout(context),
-                  child: const Text(
-                    'Log Out',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
             ],
           ),
         ),

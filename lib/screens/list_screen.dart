@@ -1,12 +1,3 @@
-// =========================================================================
-// [SIMULASI MODUL 5: HALAMAN LIST PRODUK]
-// PERBEDAAN DARI TEMPLATE-01:
-// - Pakai ProductModel bukan ArticleModel
-// - Filter berdasarkan item.category (bukan item.author)
-// - Field tampilan: item.title, item.brand, item.price
-// - Method API: ApiService.getProducts() bukan getArticles()
-// =========================================================================
-
 import 'package:flutter/material.dart';
 
 import '../models/product_model.dart';
@@ -15,11 +6,11 @@ import 'detail_screen.dart';
 import 'favorite_screen.dart';
 
 class ListScreen extends StatefulWidget {
-  final String Title;
+  final String title;
   final String endpoint;
   const ListScreen({
     super.key,
-    required this.Title,
+    required this.title,
     required this.endpoint,
   });
   @override
@@ -47,11 +38,12 @@ class _ListScreenState extends State<ListScreen> {
     try {
       final data = await ApiService.getProducts(widget.endpoint);
 
-      // [PERUBAHAN]: Filter berdasarkan category (bukan author)
+      // Filter berdasarkan category (cuisine)
       final Set<String> filterSet = {};
       for (final item in data) {
-        if (item.category.trim().isNotEmpty)
+        if (item.category.trim().isNotEmpty) {
           filterSet.add(item.category.trim());
+        }
       }
 
       setState(() {
@@ -69,7 +61,7 @@ class _ListScreenState extends State<ListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // [PERUBAHAN]: Filter berdasarkan category
+    // Filter berdasarkan category
     final displayed = _selectedFilter == 'All'
         ? _allProducts
         : _allProducts.where((p) => p.category == _selectedFilter).toList();
@@ -78,13 +70,13 @@ class _ListScreenState extends State<ListScreen> {
       backgroundColor: const Color(0xFFF7F8FC),
       appBar: AppBar(
         title: Text(
-          widget.Title,
+          widget.title,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(0xFF4C6EF5),
+        backgroundColor: const Color(0xFF4CAF50),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
@@ -95,10 +87,15 @@ class _ListScreenState extends State<ListScreen> {
               MaterialPageRoute(builder: (_) => const FavoriteScreen()),
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
         ],
       ),
       body: Column(
         children: [
+          // Filter Chips
           if (!_isLoading && _filters.isNotEmpty)
             Container(
               color: Colors.white,
@@ -115,18 +112,22 @@ class _ListScreenState extends State<ListScreen> {
                         selected: sel,
                         label: Text(f),
                         labelStyle: TextStyle(
-                          color: sel ? const Color(0xFF4C6EF5) : Colors.black87,
-                          fontWeight: sel ? FontWeight.bold : FontWeight.normal,
+                          color: sel
+                              ? const Color(0xFF4CAF50)
+                              : Colors.black87,
+                          fontWeight:
+                              sel ? FontWeight.bold : FontWeight.normal,
                           fontSize: 13,
                         ),
                         backgroundColor: const Color(0xFFF1F3F9),
-                        selectedColor: const Color(0xFFE4E9FE),
-                        onSelected: (_) => setState(() => _selectedFilter = f),
+                        selectedColor: const Color(0xFFD7F5DC),
+                        onSelected: (_) =>
+                            setState(() => _selectedFilter = f),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                           side: BorderSide(
                             color: sel
-                                ? const Color(0xFF4C6EF5)
+                                ? const Color(0xFF4CAF50)
                                 : Colors.grey.shade300,
                           ),
                         ),
@@ -137,6 +138,7 @@ class _ListScreenState extends State<ListScreen> {
               ),
             ),
 
+          // Konten Utama
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -151,7 +153,14 @@ class _ListScreenState extends State<ListScreen> {
                           color: Colors.red,
                         ),
                         const SizedBox(height: 12),
-                        Text(_errorMessage!, textAlign: TextAlign.center),
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            _errorMessage!,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _fetchData,
@@ -160,116 +169,148 @@ class _ListScreenState extends State<ListScreen> {
                       ],
                     ),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+                : displayed.isEmpty
+                ? const Center(
+                    child: Text(
+                      'Tidak ada resep ditemukan.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                :
+                // === GRIDVIEW sesuai soal ===
+                GridView.builder(
+                    padding: const EdgeInsets.all(12),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 0.78,
                     ),
                     itemCount: displayed.length,
                     itemBuilder: (ctx, i) {
                       final item = displayed[i];
-                      return Card(
-                        elevation: 1.5,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        color: const Color(0xFFFBFBFE),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(14),
-                          onTap: () => Navigator.push(
-                            ctx,
-                            MaterialPageRoute(
-                              builder: (_) => DetailScreen(item: item),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    item.imageUrl,
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (c, e, s) => Container(
-                                      width: 80,
-                                      height: 80,
-                                      color: Colors.grey.shade200,
-                                      child: const Icon(
-                                        Icons.image_not_supported_outlined,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    loadingBuilder: (c, child, p) => p == null
-                                        ? child
-                                        : Container(
-                                            width: 80,
-                                            height: 80,
-                                            color: Colors.grey.shade100,
-                                            child: const Center(
-                                              child: SizedBox(
-                                                width: 18,
-                                                height: 18,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                    ),
-                                              ),
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // [PERUBAHAN]: Judul produk
-                                      Text(
-                                        item.title,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      // [PERUBAHAN]: Brand sebagai subtitle
-                                      Text(
-                                        item.brand,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      // [PERUBAHAN]: Harga
-                                      Text(
-                                        'Rp ${item.price.toStringAsFixed(0)}',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF4C6EF5),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
+                      return _RecipeCard(item: item);
                     },
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Widget Card untuk setiap resep di GridView
+class _RecipeCard extends StatelessWidget {
+  final ProductModel item;
+  const _RecipeCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => DetailScreen(item: item)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // === Thumbnail / Leading Image ===
+            Expanded(
+              child: SizedBox(
+                width: double.infinity,
+                child: item.imageUrl.isNotEmpty
+                    ? Image.network(
+                        item.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => Container(
+                          color: Colors.grey.shade200,
+                          child: const Center(
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              color: Colors.grey,
+                              size: 40,
+                            ),
+                          ),
+                        ),
+                        loadingBuilder: (c, child, p) => p == null
+                            ? child
+                            : Container(
+                                color: Colors.grey.shade100,
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFF4CAF50),
+                                  ),
+                                ),
+                              ),
+                      )
+                    : Container(
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            color: Colors.grey,
+                            size: 40,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+
+            // === Info Resep ===
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Judul resep
+                  Text(
+                    item.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  // Asal masakan (cuisine / category)
+                  Text(
+                    item.category,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  // Rating
+                  Row(
+                    children: [
+                      const Icon(Icons.star, size: 13, color: Colors.amber),
+                      const SizedBox(width: 2),
+                      Text(
+                        item.rating.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

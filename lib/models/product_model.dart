@@ -1,25 +1,19 @@
-// =========================================================================
-// [SIMULASI MODUL 5: MODEL DATA PRODUK]
-// SEBELUMNYA: ArticleModel (berisi title, news_site, summary, published_at, dsb)
-// SEKARANG: ProductModel (menyesuaikan atribut API DummyJSON: price, rating, stock, brand, dsb)
-//
-// CARA ADAPTASI KE API LAIN:
-// 1. Tentukan atribut yang dimiliki API baru.
-// 2. Pada fromJson(), petakan key JSON dengan fallback (??) agar tidak null pointer.
-// 3. Pada toJson(), simpan data yang ingin dicatat di Hive Favorite.
-// =========================================================================
-
 class ProductModel {
   final int id;
   final String title;
-  final String description;
-  final String category;
-  final double price;
+  final String description; // instructions sebagai teks gabungan (fallback)
+  final String category; // cuisine
+  final double price; // caloriesPerServing
   final double rating;
-  final int stock;
-  final String brand;
+  final int stock; // servings
+  final String brand; // difficulty
   final String imageUrl;
-  final String webUrl; // URL web untuk url_launcher
+  final String webUrl;
+  final List<String> ingredients; // bahan-bahan
+  final List<String> instructions; // langkah memasak
+  final int prepTimeMinutes;
+  final int cookTimeMinutes;
+  final String mealType;
 
   ProductModel({
     required this.id,
@@ -32,14 +26,21 @@ class ProductModel {
     required this.brand,
     required this.imageUrl,
     required this.webUrl,
+    this.ingredients = const [],
+    this.instructions = const [],
+    this.prepTimeMinutes = 0,
+    this.cookTimeMinutes = 0,
+    this.mealType = '',
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
+    // ----- Gambar -----
     String selectedImage = '';
-    if (json['imageUrl'] != null && json['imageUrl'].toString().isNotEmpty) {
-      selectedImage = json['imageUrl'].toString();
-    } else if (json['image'] != null && json['image'].toString().isNotEmpty) {
+    if (json['image'] != null && json['image'].toString().isNotEmpty) {
       selectedImage = json['image'].toString();
+    } else if (json['imageUrl'] != null &&
+        json['imageUrl'].toString().isNotEmpty) {
+      selectedImage = json['imageUrl'].toString();
     } else if (json['thumbnail'] != null &&
         json['thumbnail'].toString().isNotEmpty) {
       selectedImage = json['thumbnail'].toString();
@@ -47,15 +48,41 @@ class ProductModel {
       selectedImage = json['images'][0].toString();
     }
 
-    final instructions = json['instructions'];
-    final description = instructions is List
-        ? instructions.map((step) => step.toString()).join('\n')
-        : instructions?.toString() ??
-              json['description']?.toString() ??
-              'Tidak ada deskripsi tersedia.';
+    // ----- ID -----
     final id = json['id'] is int
         ? json['id'] as int
         : int.tryParse(json['id']?.toString() ?? '0') ?? 0;
+
+    // ----- Ingredients -----
+    List<String> ingredients = [];
+    if (json['ingredients'] is List) {
+      ingredients = (json['ingredients'] as List)
+          .map((e) => e.toString())
+          .toList();
+    }
+
+    // ----- Instructions -----
+    List<String> instructionList = [];
+    if (json['instructions'] is List) {
+      instructionList = (json['instructions'] as List)
+          .map((e) => e.toString())
+          .toList();
+    }
+
+    // ----- Description (fallback teks) -----
+    final description = instructionList.isNotEmpty
+        ? instructionList.asMap().entries
+              .map((e) => '${e.key + 1}. ${e.value}')
+              .join('\n')
+        : json['description']?.toString() ?? 'Tidak ada deskripsi tersedia.';
+
+    // ----- MealType -----
+    String mealType = '';
+    if (json['mealType'] is List) {
+      mealType = (json['mealType'] as List).join(', ');
+    } else if (json['mealType'] != null) {
+      mealType = json['mealType'].toString();
+    }
 
     return ProductModel(
       id: id,
@@ -64,15 +91,20 @@ class ProductModel {
       description: description,
       category:
           json['cuisine']?.toString() ?? json['category']?.toString() ?? 'Umum',
-      price: _number(json['price'] ?? json['caloriesPerServing']),
+      price: _number(json['caloriesPerServing'] ?? json['price']),
       rating: _number(json['rating']),
       stock: _integer(json['servings'] ?? json['stock']),
       brand:
-          json['brand']?.toString() ??
           json['difficulty']?.toString() ??
-          'No Brand',
+          json['brand']?.toString() ??
+          'Unknown',
       imageUrl: selectedImage,
       webUrl: 'https://dummyjson.com/recipes/$id',
+      ingredients: ingredients,
+      instructions: instructionList,
+      prepTimeMinutes: _integer(json['prepTimeMinutes']),
+      cookTimeMinutes: _integer(json['cookTimeMinutes']),
+      mealType: mealType,
     );
   }
 
@@ -95,6 +127,11 @@ class ProductModel {
       'brand': brand,
       'imageUrl': imageUrl,
       'webUrl': webUrl,
+      'ingredients': ingredients,
+      'instructions': instructions,
+      'prepTimeMinutes': prepTimeMinutes,
+      'cookTimeMinutes': cookTimeMinutes,
+      'mealType': mealType,
     };
   }
 }
